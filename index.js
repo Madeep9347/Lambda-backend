@@ -39,7 +39,8 @@ export const handler = async (event) => {
         noteId: crypto.randomUUID(),
         title: event.arguments.title,
         content: event.arguments.content,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        processed: false
       };
 
       // 1️⃣ Save to DynamoDB
@@ -127,3 +128,4 @@ export const handler = async (event) => {
 
   throw new Error(`Unknown field: ${field}`);
 };
+
