@@ -3,7 +3,8 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   ScanCommand,
-  GetCommand
+  GetCommand,
+  UpdateCommand
 } from "@aws-sdk/lib-dynamodb";
 
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
@@ -53,7 +54,7 @@ export const handler = async (event) => {
 
       console.log("Note saved to DynamoDB");
 
-      // 2️⃣ Send Message to SQS (Async processing)
+      // 2️⃣ Send Message to SQS
       if (QUEUE_URL) {
         await sqs.send(
           new SendMessageCommand({
@@ -68,7 +69,7 @@ export const handler = async (event) => {
         console.log("Message sent to SQS");
       }
 
-      // 3️⃣ Publish Event to SNS (Notifications)
+      // 3️⃣ Publish Event to SNS
       if (TOPIC_ARN) {
         await sns.send(
           new PublishCommand({
@@ -88,6 +89,38 @@ export const handler = async (event) => {
     } catch (error) {
       console.error("Error creating note:", error);
       throw new Error("Failed to create note");
+    }
+  }
+
+  // ===============================
+  // UPDATE NOTE (NEW SECTION 🚀)
+  // ===============================
+  if (field === "updateNote") {
+    try {
+      const { noteId, processed } = event.arguments;
+
+      const result = await ddb.send(
+        new UpdateCommand({
+          TableName: TABLE_NAME,
+          Key: { noteId },
+          UpdateExpression: "SET #p = :p",
+          ExpressionAttributeNames: {
+            "#p": "processed"
+          },
+          ExpressionAttributeValues: {
+            ":p": processed
+          },
+          ReturnValues: "ALL_NEW"
+        })
+      );
+
+      console.log("Note updated:", noteId);
+
+      return result.Attributes;
+
+    } catch (error) {
+      console.error("Error updating note:", error);
+      throw new Error("Failed to update note");
     }
   }
 
@@ -128,4 +161,3 @@ export const handler = async (event) => {
 
   throw new Error(`Unknown field: ${field}`);
 };
-
