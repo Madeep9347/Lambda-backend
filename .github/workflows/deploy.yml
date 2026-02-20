@@ -27,9 +27,9 @@ jobs:
       - name: Deploy to Lambda
         run: |
           aws lambda update-function-code \
-            --function-name notesLambda \
+            --function-name notes-app-dev-notes-lambda \
             --zip-file fileb://function.zip \
-            --region ap-south-1
+            --region us-east-1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
